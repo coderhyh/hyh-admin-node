@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    // "declaration": true, // 生成声明文件，开启后会自动生成声明文件
+    "target": "ESNext",
+    "removeComments": true, // 删除注释
+    "alwaysStrict": true, // 在代码中注入'use strict'
+    "noImplicitAny": true, // 不允许隐式的any类型
+    "noImplicitThis": false, // 允许this有隐式的any类型
+    "sourceMap": false, // 生成目标文件的sourceMap文件
+    "noUnusedLocals": false, // 检查只声明、未使用的局部变量(只提示不报错)
+    "strictNullChecks": true, // 不允许把null、undefined赋值给其他类型的变量
+    "strictFunctionTypes": true, // 不允许函数参数双向协变
+    // "downlevelIteration": true,
+    "module": "NodeNext",
+    "esModuleInterop": true, // 允许export=导出，由import from 导入
+    "moduleResolution": "node", // 模块解q析策略，ts默认用node的解析策略，即相对的方式导入
+    "lib": ["ESNext"],
+    "outDir": "/dist",
+    "rootDir": "./",
+    "baseUrl": "./",
+    "paths": {
+      "~/*": ["./src/*"]
+    },
+    "resolveJsonModule": true,
+  },
+  "ts-node": {
+    "files": true
+  }
+}
