@@ -5,7 +5,9 @@ import errorTypes from '~/constants/error-types'
 export const requiredField = (requiredField: string[]) => {
   return async (ctx: Context, next: Next) => {
     try {
-      const data: any = ctx.req.method === 'POST' ? ctx.request.body : ctx.query
+      let data: any = ctx.req.method === 'POST' ? ctx.request.body : ctx.query
+      data = { ...data, ...ctx.params }
+
       const fieldName: string | undefined = ctx.file?.fieldName
       fieldName && (data[fieldName] = fieldName)
 

@@ -3,19 +3,19 @@ import { Context, Next } from 'koa'
 import { password2md5 } from '~/common/utils'
 import errorTypes from '~/constants/error-types'
 import userService from '~/service/user-service'
-import { IUser } from '~/types/user'
+import type { ICreateUser, IUserInfo } from '~/types/user'
 
 class UserMiddleware {
   async register_verifyParams(ctx: Context, next: Next) {
-    const { userName, passWord }: IUser = ctx.request.body as IUser
-    const userNameReg = /^[a-zA-Z\d]{8,16}$/g
-    const passWordReg = /^[\da-zA-z_]{8,16}$/g
-    if (!userNameReg.test(userName) || !passWordReg.test(passWord)) {
+    const { username, password }: ICreateUser = ctx.request.body as ICreateUser
+    const userNameReg = /^[a-zA-Z\d.]{6,16}$/g
+    const passWordReg = /^[\da-zA-z_.]{6,16}$/g
+    if (!userNameReg.test(username) || !passWordReg.test(password)) {
       ctx.app.emit('error', errorTypes.USERNAME_OR_PASSWORD_INCONFORMITY, ctx)
       return
     }
 
-    const res = await userService.getUserByName(userName)
+    const res = await userService.getUserByName(username, ctx)
     if (Array.isArray(res) && res.length) {
       ctx.app.emit('error', errorTypes.USER_ALREADY_EXISTS, ctx)
       return
@@ -24,13 +24,14 @@ class UserMiddleware {
   }
 
   async login_verifyParams(ctx: Context, next: Next) {
-    const user: IUser = ctx.request.body as IUser
-    user.passWord = password2md5(user.passWord)
-    const res = await userService.getUserInfo(user)
+    const user: ICreateUser = ctx.request.body as ICreateUser
+    user.password = password2md5(user.password)
+    const res: IUserInfo[] = await userService.getUserInfo(user, ctx)
     if (!res.length) {
       ctx.app.emit('error', errorTypes.USERNAME_OR_PASSWORD_ERROR, ctx)
       return
     }
+    ctx.user = res[0]
     await next()
   }
 }

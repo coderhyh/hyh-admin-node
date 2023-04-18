@@ -29,7 +29,7 @@ module.exports = {
         ignore: ['./']
       }
     ],
-    'import/no-extraneous-dependencies': ['error', { devDependencies: true }], // 解决依赖问题
+    'import/no-extraneous-dependencies': 'off',
     '@typescript-eslint/ban-ts-ignore': 'off',
     '@typescript-eslint/no-unused-vars': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',

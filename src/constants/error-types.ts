@@ -6,5 +6,6 @@ export default {
     status: 400
   },
   SERVER_ERROR: { msg: '服务器错误', status: 500 },
-  USERNAME_OR_PASSWORD_ERROR: { msg: '用户名或密码错误', status: 400 }
+  USERNAME_OR_PASSWORD_ERROR: { msg: '用户名或密码错误', status: 400 },
+  UNAUTHORIZATION: { msg: '无效token', status: 401 }
 }

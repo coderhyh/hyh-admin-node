@@ -15,6 +15,7 @@
   "dependencies": {
     "crypto": "^1.0.1",
     "dotenv": "^16.0.3",
+    "jsonwebtoken": "^9.0.0",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "koa-cors": "^0.0.16",
@@ -22,6 +23,7 @@
     "mysql2": "^2.3.3"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.1",
     "@types/koa": "^2.13.5",
     "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-cors": "^0.0.2",

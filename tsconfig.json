@@ -21,7 +21,7 @@
     "paths": {
       "~/*": ["./src/*"]
     },
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
   "ts-node": {
     "files": true
