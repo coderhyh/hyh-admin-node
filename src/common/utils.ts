@@ -5,6 +5,7 @@ import os from 'os'
 
 import { PRIVATE_KEY, PUBLIC_KEY } from '~/app/config'
 import errorTypes from '~/constants/error-types'
+import { ICreateUser, IUserInfo } from '~/types/user'
 
 export const password2md5 = (password: string) => {
   const md5 = crypto.createHash('md5')
@@ -34,32 +35,17 @@ export const handlerServiceError = (ctx: Context) => (err: any) => {
 }
 
 export const createToken = (userInfo: any) =>
-  new Promise((resolve, reject) => {
+  new Promise<string>((resolve, reject) => {
     tk.sign(userInfo, PRIVATE_KEY, { expiresIn: '12h', algorithm: 'RS256' }, (err, token) => {
       if (err) reject(err)
-      resolve(token)
+      resolve(token!)
     })
   })
 
 export const verifyToken = (token: string) =>
-  new Promise((resolve, reject) => {
+  new Promise<Omit<ICreateUser, 'role' | 'nickname'>>((resolve, reject) => {
     tk.verify(token, PUBLIC_KEY, { algorithms: ['RS256'] }, (err, data) => {
       if (err) reject(err)
-      resolve(data)
+      resolve(data as Omit<ICreateUser, 'role'>)
     })
   })
-
-export const verifyAuth = async (ctx: Context, next: Next) => {
-  const authorization = ctx.headers.authorization
-  if (!authorization) {
-    return ctx.app.emit('error', errorTypes.UNAUTHORIZATION, ctx)
-  }
-  const token = authorization.replace('Bearer ', '')
-
-  try {
-    ctx.user = await verifyToken(token)
-    await next()
-  } catch (err) {
-    ctx.app.emit('error', errorTypes.UNAUTHORIZATION, ctx)
-  }
-}

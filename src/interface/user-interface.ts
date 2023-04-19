@@ -24,24 +24,25 @@ class UserInterface {
   async login_create(ctx: Context, next: Next) {
     const user: Omit<ICreateUser, 'role'> = ctx.request.body as ICreateUser
     const userInfo: IUserInfo = ctx.user
+    const token: string = await createToken(user)
+    await userService.updateJWT({ username: user.username, password: user.password, token }, ctx)
 
-    Reflect.deleteProperty(userInfo, 'user_pwd')
+    Reflect.deleteProperty(userInfo, 'jwt')
     ctx.body = {
       code: 200,
       message: '登陆成功',
-      token: await createToken(user),
+      token,
       userInfo
     }
   }
 
   async queryUserInfo(ctx: Context, next: Next) {
-    const user: Omit<ICreateUser, 'role'> = ctx.user
-    const res: IUserInfo[] = await userService.getUserInfo(user, ctx)
+    const userInfo: IUserInfo = ctx.userInfo
 
-    Reflect.deleteProperty(res[0], 'user_pwd')
+    Reflect.deleteProperty(userInfo, 'jwt')
     ctx.body = {
       code: 200,
-      userInfo: res[0]
+      userInfo
     }
   }
 }

@@ -8,10 +8,17 @@ export interface ICreateUser {
 export interface IUserInfo {
   id: number
   user_name: string
-  user_pwd: string
   nickname: string
-  role: number
+  jwt: string
   create_time: string
   update_time: string
-  last_login_time: null | string
+  last_login_time?: any
+  role: Role
+  permission: string[]
+}
+
+export interface Role {
+  id: number
+  role_name: string
+  role_alias: string
 }
