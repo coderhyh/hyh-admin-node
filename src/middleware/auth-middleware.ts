@@ -2,6 +2,8 @@ import { Context, Next } from 'koa'
 
 import { verifyToken } from '~/common/utils'
 import errorTypes from '~/constants/error-types'
+import { ROLE } from '~/enums'
+import roleService from '~/service/role-service'
 import userService from '~/service/user-service'
 import { IUserInfo } from '~/types/user'
 
@@ -33,6 +35,26 @@ class AuthMiddleware {
       ctx.app.emit('error', errorTypes.UNAUTHORIZATION, ctx)
     }
   }
+
+  verifyRole(role: ROLE[]) {
+    return async (ctx: Context, next: Next) => {
+      const userInfo: IUserInfo = ctx.userInfo
+      const flag = role.includes(userInfo.role.id)
+
+      if (!flag) ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES, ctx)
+      else await next()
+    }
+  }
+
+  verifyPermission(page: string, control: string, handle: 'insert' | 'delete' | 'update' | 'query') {
+    return async (ctx: Context, next: Next) => {
+      const res: { handle: string[] } = await roleService.getPermissionByRoleId(ctx)
+      const curPermission = `${page}[${control}]:${handle}`
+
+      if (res.handle.includes(curPermission)) await next()
+      else ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES, ctx)
+    }
+  }
 }
 
-export const { verifyTokenInvalid, verifyTokenExist } = new AuthMiddleware()
+export const { verifyTokenInvalid, verifyTokenExist, verifyRole, verifyPermission } = new AuthMiddleware()

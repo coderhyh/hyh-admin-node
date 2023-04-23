@@ -1,3 +1,5 @@
+import { ROLE } from '~/enums'
+
 export interface ICreateUser {
   username: string
   password: string
@@ -7,7 +9,7 @@ export interface ICreateUser {
 
 export interface IUserInfo {
   id: number
-  user_name: string
+  username: string
   nickname: string
   jwt: string
   create_time: string
@@ -18,7 +20,7 @@ export interface IUserInfo {
 }
 
 export interface Role {
-  id: number
+  id: ROLE
   role_name: string
   role_alias: string
 }

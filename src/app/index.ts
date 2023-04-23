@@ -12,7 +12,7 @@ export interface App extends MyKoa {
 const app: App = new MyKoa()
 app.useRouter = useRouter
 
-app.use(cors())
+app.use(cors({ methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] }))
 app.use(bodyParser())
 app.useRouter(app)
 

@@ -6,7 +6,7 @@ import userService from '~/service/user-service'
 import type { ICreateUser, IUserInfo } from '~/types/user'
 
 class UserMiddleware {
-  async register_verifyParams(ctx: Context, next: Next) {
+  async registerVerifyParams(ctx: Context, next: Next) {
     const { username, password }: ICreateUser = ctx.request.body as ICreateUser
     const userNameReg = /^[a-zA-Z\d.]{6,16}$/g
     const passWordReg = /^[\da-zA-z_.]{6,16}$/g
@@ -23,7 +23,7 @@ class UserMiddleware {
     await next()
   }
 
-  async login_verifyParams(ctx: Context, next: Next) {
+  async loginVerifyParams(ctx: Context, next: Next) {
     const user: ICreateUser = ctx.request.body as ICreateUser
     user.password = password2md5(user.password)
     const res: IUserInfo[] = await userService.getUserInfo(user, ctx)
@@ -35,4 +35,4 @@ class UserMiddleware {
     await next()
   }
 }
-export const { register_verifyParams, login_verifyParams } = new UserMiddleware()
+export const { registerVerifyParams, loginVerifyParams } = new UserMiddleware()
