@@ -1,3 +1,5 @@
+import { ISubscriptionParams } from '~/types/subscription'
+
 export {}
 
 declare global {
@@ -12,5 +14,14 @@ declare global {
       PRIVATE_KEY: string
       PUBLIC_KEY: string
     }
+  }
+  interface Array<T> {
+    trim: (this: T[]) => T[]
+  }
+}
+
+declare module 'koa' {
+  interface Application {
+    emit: <T extends keyof ISubscriptionParams>(event: T, ...args: ISubscriptionParams[T]) => void
   }
 }

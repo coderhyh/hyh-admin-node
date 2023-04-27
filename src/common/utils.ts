@@ -1,11 +1,10 @@
 import crypto from 'crypto'
 import tk from 'jsonwebtoken'
-import { Context, Next } from 'koa'
+import { Context } from 'koa'
 import os from 'os'
 
 import { PRIVATE_KEY, PUBLIC_KEY } from '~/app/config'
 import errorTypes from '~/constants/error-types'
-import { ICreateUser, IUserInfo } from '~/types/user'
 
 export const password2md5 = (password: string) => {
   const md5 = crypto.createHash('md5')
@@ -28,10 +27,14 @@ export function getIpAddress() {
   }
 }
 
-export const handlerServiceError = (ctx: Context) => (err: any) => {
-  console.log(err)
-  ctx.app.emit('error', errorTypes.SERVER_ERROR, ctx)
-  return err
+export const handlerServiceError = async (ctx: Context, fn: Function): Promise<any> => {
+  try {
+    return await fn()
+  } catch (err) {
+    console.log('handlerServiceError -----> ', err)
+    ctx.app.emit('error', errorTypes.SERVER_ERROR, ctx)
+    return err
+  }
 }
 
 export const createToken = (userInfo: any) =>
@@ -43,9 +46,12 @@ export const createToken = (userInfo: any) =>
   })
 
 export const verifyToken = (token: string) =>
-  new Promise<Omit<ICreateUser, 'role' | 'nickname'>>((resolve, reject) => {
+  new Promise<Omit<User.ICreateUser, 'role' | 'nickname'>>((resolve, reject) => {
     tk.verify(token, PUBLIC_KEY, { algorithms: ['RS256'] }, (err, data) => {
       if (err) reject(err)
-      resolve(data as Omit<ICreateUser, 'role'>)
+      resolve(data as Omit<User.ICreateUser, 'role'>)
     })
   })
+
+export const getDataType = (data: any): App.IDataType =>
+  Object.prototype.toString.call(data).match(/\[object ([a-zA-Z]+)\]/)[1]

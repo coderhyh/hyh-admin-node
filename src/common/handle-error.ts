@@ -1,6 +1,6 @@
 import type { Context } from 'koa'
 
-import type { errorTypesItem } from '~/types/errorTypes'
+import type { errorTypesItem } from '~/types/subscription'
 
 export const handleError = (errorMessage: errorTypesItem, ctx: Context) => {
   const status = errorMessage.status ?? 404

@@ -2,10 +2,8 @@ import { Context, Next } from 'koa'
 
 import { verifyToken } from '~/common/utils'
 import errorTypes from '~/constants/error-types'
-import { ROLE } from '~/enums'
 import roleService from '~/service/role-service'
 import userService from '~/service/user-service'
-import { IUserInfo } from '~/types/user'
 
 class AuthMiddleware {
   async verifyTokenExist(ctx: Context, next: Next) {
@@ -25,10 +23,10 @@ class AuthMiddleware {
 
   async verifyTokenInvalid(ctx: Context, next: Next) {
     const token: string = ctx.token
+    const userAccount: User.IUserAccount = ctx.userAccount
     try {
-      const res: IUserInfo[] = await userService.getUserInfo(ctx.userAccount, ctx)
+      const res: User.IUserInfo[] = await userService.getUserInfoById([userAccount.id], ctx)
       if (res[0].jwt !== token) throw 'UNAUTHORIZATION'
-
       ctx.userInfo = res[0]
       await next()
     } catch (err) {
@@ -36,9 +34,9 @@ class AuthMiddleware {
     }
   }
 
-  verifyRole(role: ROLE[]) {
+  verifyRole(role: number[]) {
     return async (ctx: Context, next: Next) => {
-      const userInfo: IUserInfo = ctx.userInfo
+      const userInfo: User.IUserInfo = ctx.userInfo
       const flag = role.includes(userInfo.role.id)
 
       if (!flag) ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES, ctx)
@@ -46,13 +44,18 @@ class AuthMiddleware {
     }
   }
 
-  verifyPermission(page: string, control: string, handle: 'insert' | 'delete' | 'update' | 'query') {
+  verifyPermission(route: string, control: string, handle: 'insert' | 'delete' | 'update' | 'query') {
     return async (ctx: Context, next: Next) => {
-      const res: { handle: string[] } = await roleService.getPermissionByRoleId(ctx)
-      const curPermission = `${page}[${control}]:${handle}`
+      const userInfo: User.IUserInfo = ctx.userInfo
+      if (userInfo.role.status) {
+        ctx.app.emit('error', errorTypes.ROLE_FREEZE, ctx)
+      } else {
+        const res: { handle: string[] | null } = await roleService.getPermissionByRoleId(ctx)
 
-      if (res.handle.includes(curPermission)) await next()
-      else ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES, ctx)
+        const curPermission = `${route}[${control}]:${handle}`
+        if (res.handle?.includes(curPermission)) await next()
+        else ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES, ctx)
+      }
     }
   }
 }
