@@ -1,6 +1,7 @@
 import Router from 'koa-router'
 
 import {
+  createRole,
   deleteRole,
   getRoleList,
   getRoleListSelect,
@@ -8,14 +9,23 @@ import {
   updateRoleStatus
 } from '~/interface/role-interface'
 import { verifyPermission, verifyTokenExist, verifyTokenInvalid } from '~/middleware/auth-middleware'
-import { verifyDeleteRoleGrade, verifyUpdateRoleGrade } from '~/middleware/role-middleware'
+import { verifyDeleteRoleGrade, verifyRoleIsExist, verifyUpdateRoleGrade } from '~/middleware/role-middleware'
 import { requiredField, requiredFieldType } from '~/middleware/verify-middleware'
 
 import { roleFieldType } from '../config/role-config'
 
 const roleRouter = new Router({ prefix: '/role' })
 
-roleRouter.post('/create')
+roleRouter.post(
+  '/create',
+  requiredField(['role_name', 'role_alias', 'status', 'grade', 'permissionList']),
+  requiredFieldType(roleFieldType.updateRole),
+  verifyTokenExist,
+  verifyTokenInvalid,
+  verifyPermission('system/role-manage', 'table', 'insert'),
+  verifyRoleIsExist,
+  createRole
+)
 
 roleRouter.post(
   '/list',

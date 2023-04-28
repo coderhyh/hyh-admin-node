@@ -7,11 +7,33 @@ import errorTypes from '~/constants/error-types'
 
 class RoleService {
   async createRole(ctx: Context) {
-    // const s = 'INSERT INTO sys_user (username, password, nickname, role) VALUES (?, ?, ?, ?)'
-    // return handlerServiceError(ctx, async () => {
-    //   const res = await connection.execute(s, [username, password, nickname, role].trim())
-    //   return res
-    // })
+    const { role_name, role_alias, status, grade, permissionList } = ctx.request.body as Role.IUpdateRoleInfoBody
+    const { id } = ctx.userInfo as User.IUserInfo
+
+    const sql_list = [
+      `INSERT INTO sys_role (role_name, role_alias, status, grade, create_by) VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO sys_role_permission (role_id, permission_id) VALUES ${permissionList.map((e) => `(?, ?)`).join(',')}`
+    ]
+    const pool = await connection.getConnection()
+    try {
+      await pool.beginTransaction()
+      const [result]: any[] = await connection.execute(sql_list[0], [role_name, role_alias, status, grade, id])
+      const insertId = result.insertId
+      await connection.execute(sql_list[1], permissionList.map((e) => [insertId, e]).flat())
+      await pool.commit()
+      return true
+    } catch (err) {
+      await pool.rollback()
+      ctx.app.emit('error', errorTypes.SERVER_ERROR, ctx)
+      return false
+    }
+  }
+  async getRoleByName(role_name: string, ctx: Context) {
+    const s = 'SELECT * FROM sys_role WHERE role_name = ?'
+    return handlerServiceError(ctx, async () => {
+      const res = await connection.execute(s, [role_name].trim())
+      return res[0]
+    })
   }
   async getRoleInfoById(roleId: number[], ctx: Context) {
     const s = `
@@ -141,7 +163,7 @@ class RoleService {
       return true
     } catch (err) {
       await pool.rollback()
-      handlerServiceError(ctx, err)
+      ctx.app.emit('error', errorTypes.SERVER_ERROR, ctx)
       return false
     }
   }

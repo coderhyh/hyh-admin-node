@@ -1,4 +1,4 @@
-import type { Context, Next } from 'koa'
+import type { Context } from 'koa'
 
 import { createToken, password2md5 } from '~/common/utils'
 import errorTypes from '~/constants/error-types'

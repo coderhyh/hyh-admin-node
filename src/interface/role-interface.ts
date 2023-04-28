@@ -3,6 +3,13 @@ import { Context } from 'koa'
 import roleService from '~/service/role-service'
 
 class RoleInterface {
+  async createRole(ctx: Context) {
+    await roleService.createRole(ctx)
+    ctx.body ??= {
+      code: 200,
+      message: '添加成功'
+    }
+  }
   async getRoleList(ctx: Context) {
     const [roleList, total] = await Promise.all([roleService.getRoleList(ctx), roleService.getRoleListTotal(ctx)])
     ctx.body ??= {
@@ -41,4 +48,5 @@ class RoleInterface {
   }
 }
 
-export const { getRoleList, getRoleListSelect, updateRoleInfo, updateRoleStatus, deleteRole } = new RoleInterface()
+export const { createRole, getRoleList, getRoleListSelect, updateRoleInfo, updateRoleStatus, deleteRole } =
+  new RoleInterface()

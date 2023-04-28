@@ -26,6 +26,15 @@ class RoleMiddleware {
     if (flag) await next()
     else ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES_GRADE, ctx)
   }
+  async verifyRoleIsExist(ctx: Context, next: Next) {
+    const { role_name } = ctx.request.body as Role.IUpdateRoleInfoBody
+    const res = await roleService.getRoleByName(role_name, ctx)
+    if (Array.isArray(res) && res.length) {
+      ctx.app.emit('error', errorTypes.ROLE_ALREADY_EXISTS, ctx)
+      return
+    }
+    await next()
+  }
 }
 
-export const { verifyUpdateRoleGrade, verifyDeleteRoleGrade } = new RoleMiddleware()
+export const { verifyUpdateRoleGrade, verifyDeleteRoleGrade, verifyRoleIsExist } = new RoleMiddleware()
