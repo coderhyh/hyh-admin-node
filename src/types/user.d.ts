@@ -20,6 +20,7 @@ declare namespace User {
     update_time: string
     last_login_time?: any
     role: Role
+    status: App.AccountStatus
     permission: string[]
   }
 
@@ -27,7 +28,7 @@ declare namespace User {
     id: number
     role_name: string
     role_alias: string
-    status: 0 | 1
+    status: App.AccountStatus
     grade: number
   }
 }

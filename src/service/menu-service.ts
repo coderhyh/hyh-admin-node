@@ -9,7 +9,7 @@ class PermissionService {
       SELECT page, route, JSON_ARRAYAGG(
           JSON_OBJECT('id', id, 'page', page, 'route', route, 'control', control, 'handle', handle, 'description', description)
         ) children 
-      FROM sys_permission 
+      FROM sys_menu 
       GROUP BY page, route
     `
     return handlerServiceError(ctx, async () => {

@@ -2,6 +2,7 @@ import { Context, Next } from 'koa'
 
 import { verifyToken } from '~/common/utils'
 import errorTypes from '~/constants/error-types'
+import { USER } from '~/enums'
 import roleService from '~/service/role-service'
 import userService from '~/service/user-service'
 
@@ -46,15 +47,24 @@ class AuthMiddleware {
 
   verifyPermission(route: string, control: string, handle: 'insert' | 'delete' | 'update' | 'query') {
     return async (ctx: Context, next: Next) => {
+      const userAccount = ctx.userAccount as User.IUserAccount
       const userInfo: User.IUserInfo = ctx.userInfo
-      if (userInfo.role.status) {
+      const userStatus = Number(userInfo.status)
+      const roleStatus = Number(userInfo.role.status)
+
+      if (roleStatus === USER.FROZEN) {
         ctx.app.emit('error', errorTypes.ROLE_FREEZE, ctx)
-      } else {
+      } else if (userStatus === USER.FROZEN) {
+        await userService.updateJWT({ username: userAccount.username, password: userAccount.password, token: '' }, ctx)
+        ctx.app.emit('error', { ...errorTypes.USER_FREEZE, redirect: '/login' }, ctx)
+      } else if ([userStatus, roleStatus].every((s) => [USER.UNFROZEN, USER.ADMIN].includes(s))) {
         const res: { handle: string[] | null } = await roleService.getPermissionByRoleId(ctx)
 
         const curPermission = `${route}[${control}]:${handle}`
         if (res.handle?.includes(curPermission)) await next()
         else ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES, ctx)
+      } else {
+        ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES, ctx)
       }
     }
   }

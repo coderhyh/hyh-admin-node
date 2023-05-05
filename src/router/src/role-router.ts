@@ -9,7 +9,12 @@ import {
   updateRoleStatus
 } from '~/interface/role-interface'
 import { verifyPermission, verifyTokenExist, verifyTokenInvalid } from '~/middleware/auth-middleware'
-import { verifyDeleteRoleGrade, verifyRoleIsExist, verifyUpdateRoleGrade } from '~/middleware/role-middleware'
+import {
+  verifyDeleteRoleGrade,
+  verifyRoleIsDelete,
+  verifyRoleIsExist,
+  verifyUpdateRoleGrade
+} from '~/middleware/role-middleware'
 import { requiredField, requiredFieldType } from '~/middleware/verify-middleware'
 
 import { roleFieldType } from '../config/role-config'
@@ -68,6 +73,7 @@ roleRouter.delete(
   verifyTokenInvalid,
   verifyPermission('system/role-manage', 'table', 'delete'),
   verifyDeleteRoleGrade,
+  verifyRoleIsDelete,
   deleteRole
 )
 

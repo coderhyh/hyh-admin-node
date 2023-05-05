@@ -20,6 +20,8 @@ export const userFieldType: { [k: string]: App.IFieldListType[] } = {
   updateUser: [
     { field: 'username', types: ['String'] },
     { field: 'role', types: ['String', 'Number'] },
-    { field: 'nickname', types: ['String'] }
-  ]
+    { field: 'nickname', types: ['String'] },
+    { field: 'status', types: ['Number'] }
+  ],
+  updateUserStatus: [{ field: 'status', types: ['Number'] }]
 }

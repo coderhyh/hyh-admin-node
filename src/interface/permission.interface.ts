@@ -1,6 +1,6 @@
 import { Context } from 'koa'
 
-import permissionService from '~/service/permission-service'
+import permissionService from '~/service/menu-service'
 
 class PermissionInterface {
   async getRolePermissionSelect(ctx: Context) {

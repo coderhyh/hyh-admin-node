@@ -7,6 +7,7 @@ import {
   queryUserInfo,
   registerCreate,
   updateUserInfo,
+  updateUserStatus,
   userExit
 } from '~/interface/user-interface'
 import { verifyPermission, verifyTokenExist, verifyTokenInvalid } from '~/middleware/auth-middleware'
@@ -55,12 +56,22 @@ userRouter.delete(
 )
 userRouter.patch(
   '/:userId',
-  requiredField(['username', 'nickname', 'role']),
+  requiredField(['username', 'nickname', 'role', 'status']),
   requiredFieldType(userFieldType.updateUser),
   verifyTokenExist,
   verifyTokenInvalid,
   verifyPermission('system/user-manage', 'table', 'update'),
   verifyUpdateUserGrade,
   updateUserInfo
+)
+userRouter.patch(
+  '/status/:userId',
+  requiredField(['status']),
+  requiredFieldType(userFieldType.updateUserStatus),
+  verifyTokenExist,
+  verifyTokenInvalid,
+  verifyPermission('system/role-manage', 'table', 'update'),
+  verifyUpdateUserGrade,
+  updateUserStatus
 )
 module.exports = userRouter

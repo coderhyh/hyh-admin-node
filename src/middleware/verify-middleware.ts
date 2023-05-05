@@ -19,7 +19,7 @@ class VerifyMiddleware {
         const errorMsg = errorTypes.PARAMETER_MISSIMG
 
         lackData.length
-          ? ctx.app.emit('error', { ...errorMsg, msg: errorMsg.msg + lackData.join(',') }, ctx)
+          ? ctx.app.emit('error', { ...errorMsg, msg: errorMsg.message + lackData.join(',') }, ctx)
           : await next()
       } catch (err) {
         console.log(err)

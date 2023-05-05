@@ -1,4 +1,5 @@
 declare namespace App {
+  type AccountStatus = 0 | 1 | 2
   type IDataType =
     | 'Object'
     | 'Array'

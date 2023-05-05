@@ -6,12 +6,12 @@ import { handlerServiceError } from '~/common/utils'
 import errorTypes from '~/constants/error-types'
 
 const userInfoSql = `
-  SELECT su.id, su.username, su.nickname, su.jwt, su.create_time, su.update_time, su.last_login_time, 
+  SELECT su.id, su.username, su.nickname, su.jwt, su.status, su.create_time, su.update_time, su.last_login_time, 
     JSON_OBJECT('id', sr.id, 'role_name', sr.role_name, 'role_alias', sr.role_alias, 'status', sr.status, 'grade', sr.grade) role,
     (
       SELECT JSON_ARRAYAGG(CONCAT(su.id, ':', sp.route, '[', sp.control, ']:', sp.handle))
-      FROM sys_role_permission srp
-      LEFT JOIN sys_permission sp on sp.id = srp.permission_id
+      FROM sys_role_menu srp
+      LEFT JOIN sys_menu sp on sp.id = srp.permission_id
       WHERE srp.role_id = su.role
     ) permission
   FROM sys_user su
@@ -84,12 +84,12 @@ class userService {
     }
 
     const s = `
-      SELECT su.id, su.username, su.nickname, su.create_time, su.update_time, su.last_login_time, 
+      SELECT su.id, su.username, su.nickname, su.create_time, su.update_time, su.last_login_time, su.status,
         JSON_OBJECT('id', sr.id, 'role_name', sr.role_name, 'role_alias', sr.role_alias, 'status', sr.status, 'grade', sr.grade) role,
         (
           SELECT JSON_ARRAYAGG(CONCAT(su.id, ':', sp.route, '[', sp.control, ']:', sp.handle))
-          FROM sys_role_permission srp
-          LEFT JOIN sys_permission sp on sp.id = srp.permission_id
+          FROM sys_role_menu srp
+          LEFT JOIN sys_menu sp on sp.id = srp.permission_id
           WHERE srp.role_id = su.role
         ) permission
       FROM sys_user su
@@ -135,11 +135,32 @@ class userService {
   }
   async updateUserInfo(ctx: Context) {
     const userId: string = ctx.params.userId
-    const { username, nickname, role } = ctx.request.body as { username: string; nickname: string; role: string }
-    const s = `UPDATE sys_user SET username = ?, nickname = ?, role = ? WHERE id = ?`
+    const { username, nickname, role, status } = ctx.request.body as {
+      username: string
+      nickname: string
+      role: string
+      status: App.AccountStatus
+    }
+    const s = `UPDATE sys_user SET username = ?, nickname = ?, role = ?, status = ? WHERE id = ?`
     return handlerServiceError(ctx, async () => {
-      const res: any = await connection.execute(s, [username, nickname, role, userId].trim())
+      const res: any = await connection.execute(s, [username, nickname, role, status, userId].trim())
       return !!res[0]?.affectedRows
+    })
+  }
+  async updateUserStatus(ctx: Context) {
+    const userId: string = ctx.params.userId
+    const { status } = ctx.request.body as Pick<User.IUserInfo, 'status'>
+    const s = `UPDATE sys_user SET status = ? WHERE id = ?`
+    return handlerServiceError(ctx, async () => {
+      const res: any = await connection.execute(s, [status, userId])
+      return !!res[0]?.affectedRows
+    })
+  }
+  async getUserByRoleIds(roleIds: number[], ctx: Context) {
+    const s = `SELECT role FROM sys_user WHERE role in (${roleIds.map((e) => '?').join(',')}) GROUP BY role`
+    return handlerServiceError(ctx, async () => {
+      const res = await connection.execute({ sql: s, values: roleIds, rowsAsArray: true })
+      return res[0]
     })
   }
 }

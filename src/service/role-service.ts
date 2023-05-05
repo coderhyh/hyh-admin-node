@@ -12,7 +12,7 @@ class RoleService {
 
     const sql_list = [
       `INSERT INTO sys_role (role_name, role_alias, status, grade, create_by) VALUES (?, ?, ?, ?, ?)`,
-      `INSERT INTO sys_role_permission (role_id, permission_id) VALUES ${permissionList.map((e) => `(?, ?)`).join(',')}`
+      `INSERT INTO sys_role_menu (role_id, permission_id) VALUES ${permissionList.map((e) => `(?, ?)`).join(',')}`
     ]
     const pool = await connection.getConnection()
     try {
@@ -42,8 +42,8 @@ class RoleService {
         su2.username AS update_by, 
         JSON_ARRAYAGG(JSON_OBJECT('id', sp.id, 'page', sp.page, 'route', sp.route, 'control', sp.control, 'handler', sp.handle, 'description', sp.description)) permission
       FROM sys_role sr
-      LEFT JOIN sys_role_permission srp ON srp.role_id = sr.id
-      LEFT JOIN sys_permission sp ON sp.id = srp.permission_id
+      LEFT JOIN sys_role_menu srp ON srp.role_id = sr.id
+      LEFT JOIN sys_menu sp ON sp.id = srp.permission_id
       LEFT JOIN sys_user su1 ON su1.id = sr.create_by
       LEFT JOIN sys_user su2 ON su2.id = sr.update_by
       WHERE sr.id in (${roleId.map((e) => '?').join(',')})
@@ -59,8 +59,8 @@ class RoleService {
     const roleId = userInfo.role.id
     const s = `
       SELECT JSON_ARRAYAGG(CONCAT(sp.route, '[', sp.control, ']:', sp.handle)) handle
-      FROM sys_role_permission srp
-      LEFT JOIN sys_permission sp on sp.id = srp.permission_id
+      FROM sys_role_menu srp
+      LEFT JOIN sys_menu sp on sp.id = srp.permission_id
       WHERE srp.role_id = ?
     `
     return handlerServiceError(ctx, async () => {
@@ -103,8 +103,8 @@ class RoleService {
           JSON_OBJECT('id', sp.id, 'page', sp.page, 'route', sp.route, 'control', sp.control, 'handler', sp.handle, 'description', sp.description)
           ) permission
       FROM sys_role sr
-      LEFT JOIN sys_role_permission srp on srp.role_id = sr.id
-      LEFT JOIN sys_permission sp on sp.id = srp.permission_id
+      LEFT JOIN sys_role_menu srp on srp.role_id = sr.id
+      LEFT JOIN sys_menu sp on sp.id = srp.permission_id
       LEFT JOIN sys_user su1 ON su1.id = sr.create_by
       LEFT JOIN sys_user su2 ON su2.id = sr.update_by
       WHERE sr.id LIKE ? AND sr.role_name LIKE ? AND sr.role_alias LIKE ?
@@ -127,9 +127,19 @@ class RoleService {
     })
   }
   async getRoleListTotal(ctx: Context) {
-    const s = `SELECT COUNT(*) total FROM sys_role`
+    type queryConditionType = { id: string; role_name: string; role_alias: string }
+    const { queryCondition = { id: '', role_name: '', role_alias: '' } } = ctx.request
+      .body as App.IListParamsType<queryConditionType>
+
+    const { id = '', role_name = '', role_alias = '' } = queryCondition
+
+    const s = `SELECT COUNT(*) total FROM sys_role WHERE id LIKE ? AND role_name LIKE ? AND role_alias LIKE ?`
     return handlerServiceError(ctx, async () => {
-      const res: any = await connection.execute(s)
+      const res: any = await connection.execute(s, [
+        `%${id.trim()}%`,
+        `%${role_name.trim()}%`,
+        `%${role_alias.trim()}%`
+      ])
       return res[0]?.[0]?.total ?? 0
     })
   }
@@ -147,8 +157,8 @@ class RoleService {
 
     const sql_list = [
       `UPDATE sys_role SET role_name = ?, role_alias = ?, status = ?, grade = ?, update_by = ? WHERE id = ?`,
-      `DELETE FROM sys_role_permission WHERE role_id = ?`,
-      `INSERT INTO sys_role_permission (role_id, permission_id) VALUES ${permissionList.map((e) => `(?, ?)`).join(',')}`
+      `DELETE FROM sys_role_menu WHERE role_id = ?`,
+      `INSERT INTO sys_role_menu (role_id, permission_id) VALUES ${permissionList.map((e) => `(?, ?)`).join(',')}`
     ]
     const s = [
       mysql.format(sql_list[0], [role_name, role_alias, status, grade, id, roleId]),

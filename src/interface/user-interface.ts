@@ -2,6 +2,7 @@ import type { Context } from 'koa'
 
 import { createToken, password2md5 } from '~/common/utils'
 import errorTypes from '~/constants/error-types'
+import { USER } from '~/enums'
 import userService from '~/service/user-service'
 
 class UserInterface {
@@ -27,6 +28,9 @@ class UserInterface {
     await userService.updateJWT({ username: user.username, password: user.password, token }, ctx)
 
     Reflect.deleteProperty(userInfo, 'jwt')
+    if (userInfo.status === USER.FROZEN) {
+      ctx.app.emit('error', { ...errorTypes.USER_FREEZE, redirect: '/login' }, ctx)
+    }
     ctx.body ??= {
       code: 200,
       message: '登录成功',
@@ -48,6 +52,9 @@ class UserInterface {
   async queryUserInfo(ctx: Context) {
     const userInfo: User.IUserInfo = ctx.userInfo
     Reflect.deleteProperty(userInfo, 'jwt')
+    if (userInfo.status === USER.FROZEN) {
+      ctx.app.emit('error', { ...errorTypes.USER_FREEZE, redirect: '/login' }, ctx)
+    }
     ctx.body ??= {
       code: 200,
       userInfo
@@ -81,7 +88,23 @@ class UserInterface {
       message: flag ? '修改成功' : '用户不存在'
     }
   }
+
+  async updateUserStatus(ctx: Context) {
+    const flag = await userService.updateUserStatus(ctx)
+    ctx.body ??= {
+      code: 200,
+      message: flag ? '修改成功' : '用户不存在'
+    }
+  }
 }
 
-export const { registerCreate, loginCreate, queryUserInfo, getUserList, userExit, deleteUser, updateUserInfo } =
-  new UserInterface()
+export const {
+  registerCreate,
+  loginCreate,
+  queryUserInfo,
+  getUserList,
+  userExit,
+  deleteUser,
+  updateUserInfo,
+  updateUserStatus
+} = new UserInterface()

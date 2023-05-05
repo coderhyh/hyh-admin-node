@@ -2,6 +2,7 @@ import { Context, Next } from 'koa'
 
 import errorTypes from '~/constants/error-types'
 import roleService from '~/service/role-service'
+import userService from '~/service/user-service'
 
 class RoleMiddleware {
   async verifyUpdateRoleGrade(ctx: Context, next: Next) {
@@ -35,6 +36,18 @@ class RoleMiddleware {
     }
     await next()
   }
+  async verifyRoleIsDelete(ctx: Context, next: Next) {
+    const { roleIds } = ctx.request.body as { roleIds: number[] }
+
+    const res_roleIds = await userService.getUserByRoleIds(roleIds, ctx)
+    const ids = res_roleIds.flat()
+    if (!ids.length) {
+      await next()
+    } else {
+      ctx.app.emit('error', { ...errorTypes.ROLE_RELEVANCE_USER, roleIds: ids }, ctx)
+    }
+  }
 }
 
-export const { verifyUpdateRoleGrade, verifyDeleteRoleGrade, verifyRoleIsExist } = new RoleMiddleware()
+export const { verifyUpdateRoleGrade, verifyDeleteRoleGrade, verifyRoleIsExist, verifyRoleIsDelete } =
+  new RoleMiddleware()

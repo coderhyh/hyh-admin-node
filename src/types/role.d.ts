@@ -24,7 +24,7 @@ declare namespace Role {
   interface IUpdateRoleInfoBody {
     role_name: string
     role_alias: string
-    status: 0 | 1
+    status: App.AccountStatus
     grade: number
     permissionList: number[]
   }
