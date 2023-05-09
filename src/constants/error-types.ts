@@ -9,6 +9,7 @@ export default {
   USERNAME_OR_PASSWORD_ERROR: { message: '用户名或密码错误', code: 400 },
   ROLE_RELEVANCE_USER: { message: '以下角色关联了用户, 无法删除', code: 400 },
   BAD_REQUEST: { message: '参数不合法', code: 400 },
+  MENU_TYPE_BAD: { message: '菜单类型不合法: ', code: 400 },
   SERVER_ERROR: { message: '服务器错误', code: 500 },
   UNAUTHORIZATION: { message: '登录失效', code: 401 },
   INSUFFICIENT_PRIVILEGES: { message: '权限不足', code: 403 },

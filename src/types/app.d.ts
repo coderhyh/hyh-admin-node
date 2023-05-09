@@ -7,8 +7,8 @@ declare namespace App {
     | 'String'
     | 'Function'
     | 'Boolean'
-    | 'null'
-    | 'undefined'
+    | 'Null'
+    | 'Undefined'
     | 'Symbol'
     | 'BigInt'
 

@@ -8,14 +8,11 @@ import errorTypes from '~/constants/error-types'
 const userInfoSql = `
   SELECT su.id, su.username, su.nickname, su.jwt, su.status, su.create_time, su.update_time, su.last_login_time, 
     JSON_OBJECT('id', sr.id, 'role_name', sr.role_name, 'role_alias', sr.role_alias, 'status', sr.status, 'grade', sr.grade) role,
-    (
-      SELECT JSON_ARRAYAGG(CONCAT(su.id, ':', sp.route, '[', sp.control, ']:', sp.handle))
-      FROM sys_role_menu srp
-      LEFT JOIN sys_menu sp on sp.id = srp.permission_id
-      WHERE srp.role_id = su.role
-    ) permission
+    JSON_ARRAYAGG(CONCAT(su.id, ':', sm.permission)) permission
   FROM sys_user su
   LEFT JOIN sys_role sr ON su.role = sr.id
+  LEFT JOIN sys_role_menu srm ON srm.role_id = sr.id
+  LEFT JOIN sys_menu sm ON sm.id = srm.menu_id
 `
 
 class userService {
@@ -46,6 +43,7 @@ class userService {
     const s = `
       ${userInfoSql}
       WHERE su.id in (${ids.map((e) => '?').join(',')})
+      GROUP BY su.id
     `
     return handlerServiceError(ctx, async () => {
       const res = await connection.execute(s, ids)
@@ -59,6 +57,7 @@ class userService {
     const s = `
       ${userInfoSql}
       WHERE su.username = ? AND su.password = ?
+      GROUP BY su.id
     `
     return handlerServiceError(ctx, async () => {
       const res = await connection.execute(s, [username, password])
@@ -86,15 +85,13 @@ class userService {
     const s = `
       SELECT su.id, su.username, su.nickname, su.create_time, su.update_time, su.last_login_time, su.status,
         JSON_OBJECT('id', sr.id, 'role_name', sr.role_name, 'role_alias', sr.role_alias, 'status', sr.status, 'grade', sr.grade) role,
-        (
-          SELECT JSON_ARRAYAGG(CONCAT(su.id, ':', sp.route, '[', sp.control, ']:', sp.handle))
-          FROM sys_role_menu srp
-          LEFT JOIN sys_menu sp on sp.id = srp.permission_id
-          WHERE srp.role_id = su.role
-        ) permission
+        JSON_ARRAYAGG(CONCAT(su.id, ':', sm.permission)) permission
       FROM sys_user su
       LEFT JOIN sys_role sr ON su.role = sr.id
+      LEFT JOIN sys_role_menu srm ON srm.role_id = sr.id
+      LEFT JOIN sys_menu sm ON sm.id = srm.menu_id
       WHERE su.id LIKE ? AND su.username LIKE ? AND su.nickname LIKE ?
+      GROUP BY su.id
       ORDER BY su.${orderBy} ${order}
       LIMIT ?, ?
     `

@@ -12,14 +12,16 @@ class RoleService {
 
     const sql_list = [
       `INSERT INTO sys_role (role_name, role_alias, status, grade, create_by) VALUES (?, ?, ?, ?, ?)`,
-      `INSERT INTO sys_role_menu (role_id, permission_id) VALUES ${permissionList.map((e) => `(?, ?)`).join(',')}`
+      permissionList.length
+        ? `INSERT INTO sys_role_menu (role_id, menu_id) VALUES ${permissionList.map((e) => `(?, ?)`).join(',')}`
+        : undefined
     ]
     const pool = await connection.getConnection()
     try {
       await pool.beginTransaction()
-      const [result]: any[] = await connection.execute(sql_list[0], [role_name, role_alias, status, grade, id])
+      const [result]: any[] = await connection.execute(sql_list[0]!, [role_name, role_alias, status, grade, id])
       const insertId = result.insertId
-      await connection.execute(sql_list[1], permissionList.map((e) => [insertId, e]).flat())
+      sql_list[1] && (await connection.execute(sql_list[1], permissionList.map((e) => [insertId, e]).flat()))
       await pool.commit()
       return true
     } catch (err) {
@@ -40,10 +42,10 @@ class RoleService {
       SELECT sr.id, sr.role_name, sr.role_alias, sr.status, sr.grade, sr.create_time, sr.update_time,
         su1.username AS create_by,
         su2.username AS update_by, 
-        JSON_ARRAYAGG(JSON_OBJECT('id', sp.id, 'page', sp.page, 'route', sp.route, 'control', sp.control, 'handler', sp.handle, 'description', sp.description)) permission
+        JSON_ARRAYAGG(JSON_OBJECT('id', sm.id, 'page', sm.page, 'permission', sm.permission)) permission
       FROM sys_role sr
       LEFT JOIN sys_role_menu srp ON srp.role_id = sr.id
-      LEFT JOIN sys_menu sp ON sp.id = srp.permission_id
+      LEFT JOIN sys_menu sm ON sm.id = srp.menu_id
       LEFT JOIN sys_user su1 ON su1.id = sr.create_by
       LEFT JOIN sys_user su2 ON su2.id = sr.update_by
       WHERE sr.id in (${roleId.map((e) => '?').join(',')})
@@ -58,9 +60,9 @@ class RoleService {
     const userInfo: User.IUserInfo = ctx.userInfo
     const roleId = userInfo.role.id
     const s = `
-      SELECT JSON_ARRAYAGG(CONCAT(sp.route, '[', sp.control, ']:', sp.handle)) handle
+      SELECT JSON_ARRAYAGG(sm.permission) handle
       FROM sys_role_menu srp
-      LEFT JOIN sys_menu sp on sp.id = srp.permission_id
+      LEFT JOIN sys_menu sm on sm.id = srp.menu_id
       WHERE srp.role_id = ?
     `
     return handlerServiceError(ctx, async () => {
@@ -100,11 +102,11 @@ class RoleService {
         su1.username AS create_by,
 	      su2.username AS update_by, 
         JSON_ARRAYAGG(
-          JSON_OBJECT('id', sp.id, 'page', sp.page, 'route', sp.route, 'control', sp.control, 'handler', sp.handle, 'description', sp.description)
-          ) permission
+          IF(sm.id, JSON_OBJECT('id', sm.id, 'page', sm.page, 'permission', sm.permission), NULL)
+        ) permission
       FROM sys_role sr
-      LEFT JOIN sys_role_menu srp on srp.role_id = sr.id
-      LEFT JOIN sys_menu sp on sp.id = srp.permission_id
+      LEFT JOIN sys_role_menu srp ON srp.role_id = sr.id
+      LEFT JOIN sys_menu sm ON sm.id = srp.menu_id
       LEFT JOIN sys_user su1 ON su1.id = sr.create_by
       LEFT JOIN sys_user su2 ON su2.id = sr.update_by
       WHERE sr.id LIKE ? AND sr.role_name LIKE ? AND sr.role_alias LIKE ?
@@ -158,17 +160,19 @@ class RoleService {
     const sql_list = [
       `UPDATE sys_role SET role_name = ?, role_alias = ?, status = ?, grade = ?, update_by = ? WHERE id = ?`,
       `DELETE FROM sys_role_menu WHERE role_id = ?`,
-      `INSERT INTO sys_role_menu (role_id, permission_id) VALUES ${permissionList.map((e) => `(?, ?)`).join(',')}`
+      permissionList.length
+        ? `INSERT INTO sys_role_menu (role_id, menu_id) VALUES ${permissionList.map((e) => `(?, ?)`).join(',')}`
+        : undefined
     ]
     const s = [
-      mysql.format(sql_list[0], [role_name, role_alias, status, grade, id, roleId]),
-      mysql.format(sql_list[1], [roleId]),
-      mysql.format(sql_list[2], permissionList.map((e) => [roleId, e]).flat())
+      mysql.format(sql_list[0]!, [role_name, role_alias, status, grade, id, roleId]),
+      mysql.format(sql_list[1]!, [roleId]),
+      sql_list[2] && mysql.format(sql_list[2], permissionList.map((e) => [roleId, e]).flat())
     ]
     const pool = await connection.getConnection()
     try {
       await pool.beginTransaction()
-      await Promise.all(s.map((e) => pool.query(e)))
+      await Promise.all(s.map((e) => e && pool.query(e)))
       await pool.commit()
       return true
     } catch (err) {

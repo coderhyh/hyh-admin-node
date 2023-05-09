@@ -12,6 +12,7 @@ class RoleInterface {
   }
   async getRoleList(ctx: Context) {
     const [roleList, total] = await Promise.all([roleService.getRoleList(ctx), roleService.getRoleListTotal(ctx)])
+    roleList.forEach((e: any) => (e.permission = e.permission.filter(Boolean)))
     ctx.body ??= {
       code: 200,
       total,

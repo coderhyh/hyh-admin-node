@@ -55,3 +55,22 @@ export const verifyToken = (token: string) =>
 
 export const getDataType = (data: any): App.IDataType =>
   Object.prototype.toString.call(data).match(/\[object ([a-zA-Z]+)\]/)[1]
+
+export function buildTree(data: any[]) {
+  const tree: { [k: string]: any } = {}
+  const roots: any[] = []
+
+  data.forEach((node) => {
+    tree[node.id] = { ...node, children: [] }
+  })
+
+  data.forEach((node) => {
+    if (node.parentId !== null) {
+      tree[node.parentId].children.push(tree[node.id])
+    } else {
+      roots.push(tree[node.id])
+    }
+  })
+
+  return roots
+}
