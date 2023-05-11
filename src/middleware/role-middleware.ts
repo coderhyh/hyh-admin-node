@@ -7,16 +7,22 @@ import userService from '~/service/user-service'
 class RoleMiddleware {
   async verifyUpdateRoleGrade(ctx: Context, next: Next) {
     const { role } = ctx.userInfo as User.IUserInfo
-    const [{ grade: curGrade }]: Role.IRoleInfo[] = await roleService.getRoleInfoById([ctx.params.roleId], ctx)
-    const { grade: newGrade = curGrade } = ctx.request.body as Role.IUpdateRoleInfoBody
+    const res: Role.IRoleInfo[] = await roleService.getRoleInfoById([ctx.params.roleId], ctx)
+    if (res.length) {
+      const curGrade = res[0].grade
+      const { grade: newGrade = curGrade } = ctx.request.body as Role.IUpdateRoleInfoBody
 
-    if (typeof curGrade !== 'number') return
-    if (role.grade <= curGrade && role.grade <= newGrade) {
-      // 修改者的权限 >= 被修改者当前的权限
-      // &&
-      // 修改者的权限 >= 被修改者新的权限
-      await next()
-    } else ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES_GRADE, ctx)
+      if (typeof curGrade !== 'number') return
+      if (role.grade <= curGrade && role.grade <= newGrade) {
+        // 修改者的权限 >= 被修改者当前的权限
+        // &&
+        // 修改者的权限 >= 被修改者新的权限
+        await next()
+      } else ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES_GRADE, ctx)
+    } else {
+      const obj = errorTypes.NON_EXISTENT
+      ctx.app.emit('error', { ...obj, message: `角色${obj.message}` }, ctx)
+    }
   }
   async verifyDeleteRoleGrade(ctx: Context, next: Next) {
     const { role } = ctx.userInfo as User.IUserInfo

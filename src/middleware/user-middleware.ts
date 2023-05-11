@@ -27,8 +27,7 @@ class UserMiddleware {
     user.password = password2md5(user.password)
     const res: User.IUserInfo[] = await userService.getUserInfoByAccount(user, ctx)
     if (!res.length) {
-      ctx.app.emit('error', errorTypes.USERNAME_OR_PASSWORD_ERROR, ctx)
-      return
+      return ctx.app.emit('error', errorTypes.USERNAME_OR_PASSWORD_ERROR, ctx)
     }
     ctx.userInfo = res[0]
     await next()
@@ -36,18 +35,23 @@ class UserMiddleware {
 
   async verifyUpdateUserGrade(ctx: Context, next: Next) {
     const { role } = ctx.userInfo as User.IUserInfo
-    const userId: number = ctx.params.userId
-    const [{ role: paramsRole }]: User.IUserInfo[] = await userService.getUserInfoById([userId], ctx)
-
-    if (role.grade <= paramsRole.grade) {
-      // 修改者的权限 >= 被修改者当前的权限
-      await next()
-    } else ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES_GRADE, ctx)
+    const userId: string = ctx.params.userId
+    const res = await userService.getUserInfoById([Number(userId)], ctx)
+    if (res.length) {
+      const paramsRole = res[0].role
+      if (role.grade <= paramsRole.grade) {
+        // 修改者的权限 >= 被修改者当前的权限
+        await next()
+      } else ctx.app.emit('error', errorTypes.INSUFFICIENT_PRIVILEGES_GRADE, ctx)
+    } else {
+      const obj = errorTypes.NON_EXISTENT
+      ctx.app.emit('error', { ...obj, message: `用户${obj.message}` }, ctx)
+    }
   }
   async verifyDeleteUserGrade(ctx: Context, next: Next) {
     const { role } = ctx.userInfo as User.IUserInfo
     const { userIds } = ctx.request.body as { userIds: number[] }
-    const userInfos: User.IUserInfo[] = await userService.getUserInfoById(userIds, ctx)
+    const userInfos = await userService.getUserInfoById(userIds, ctx)
     const flag = userInfos.every((e) => role.grade <= e.role.grade)
 
     if (flag) await next()

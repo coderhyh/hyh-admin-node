@@ -10,6 +10,13 @@ class PermissionInterface {
       menuTree
     }
   }
+  async getMenuTreeSelect(ctx: Context) {
+    const menuTreeSelect = await menuService.getMenuTreeSelect(ctx)
+    ctx.body ??= {
+      code: 200,
+      menuTreeSelect
+    }
+  }
   async getMenu(ctx: Context) {
     const menu = await menuService.getMenu(ctx)
     ctx.body ??= {
@@ -31,6 +38,13 @@ class PermissionInterface {
       message: flag ? '修改成功' : '用户不存在'
     }
   }
+  async deleteMenu(ctx: Context) {
+    const flag = await menuService.deleteMenu(ctx)
+    ctx.body ??= {
+      code: 200,
+      message: flag ? '删除成功' : '角色不存在'
+    }
+  }
 }
 
-export const { getMenuTree, getMenu, createMenu, updateMenu } = new PermissionInterface()
+export const { getMenuTree, getMenuTreeSelect, getMenu, createMenu, updateMenu, deleteMenu } = new PermissionInterface()

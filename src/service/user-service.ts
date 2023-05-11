@@ -2,11 +2,12 @@ import dayjs from 'dayjs'
 import { Context } from 'koa'
 
 import connection from '~/app/database'
-import { handlerServiceError } from '~/common/utils'
+import { handlerServiceError, password2md5 } from '~/common/utils'
 import errorTypes from '~/constants/error-types'
 
-const userInfoSql = `
-  SELECT su.id, su.username, su.nickname, su.jwt, su.status, su.create_time, su.update_time, su.last_login_time, 
+const userInfoSql = (isPwd = false) => `
+  SELECT su.id, su.username, ${isPwd ? 'su.password,' : ''}
+  su.nickname, su.jwt, su.status, su.create_time, su.update_time, su.last_login_time, 
     JSON_OBJECT('id', sr.id, 'role_name', sr.role_name, 'role_alias', sr.role_alias, 'status', sr.status, 'grade', sr.grade) role,
     JSON_ARRAYAGG(CONCAT(su.id, ':', sm.permission)) permission
   FROM sys_user su
@@ -39,9 +40,9 @@ class userService {
       return res
     })
   }
-  async getUserInfoById(ids: number[], ctx: Context): Promise<User.IUserInfo[]> {
+  async getUserInfoById(ids: number[], ctx: Context): Promise<(User.IUserInfo & { password: string })[]> {
     const s = `
-      ${userInfoSql}
+      ${userInfoSql(true)}
       WHERE su.id in (${ids.map((e) => '?').join(',')})
       GROUP BY su.id
     `
@@ -55,7 +56,7 @@ class userService {
     ctx: Context
   ): Promise<User.IUserInfo[]> {
     const s = `
-      ${userInfoSql}
+      ${userInfoSql()}
       WHERE su.username = ? AND su.password = ?
       GROUP BY su.id
     `
@@ -125,8 +126,23 @@ class userService {
   async deleteUser(ctx: Context) {
     const { userIds } = ctx.request.body as { userIds: number[] }
     const s = `DELETE FROM sys_user WHERE id in (${userIds.map((e) => `?`).join(',')})`
-    return handlerServiceError(ctx, async () => {
+    try {
       const res: any = await connection.execute(s, userIds.trim())
+      return !!res[0]?.affectedRows
+    } catch (error) {
+      if (error.sqlState === '45000') {
+        ctx.app.emit('error', { message: error.sqlMessage, code: 403 }, ctx)
+      }
+    }
+  }
+  async resetPassword(ctx: Context) {
+    const userId: string = ctx.params.userId
+    const { newPassword } = ctx.request.body as {
+      newPassword: string | number
+    }
+    const s = `UPDATE sys_user SET password = ? WHERE id = ?`
+    return handlerServiceError(ctx, async () => {
+      const res: any = await connection.execute(s, [password2md5(String(newPassword)), userId].trim())
       return !!res[0]?.affectedRows
     })
   }

@@ -24,13 +24,14 @@ class AuthMiddleware {
 
   async verifyTokenInvalid(ctx: Context, next: Next) {
     const token: string = ctx.token
-    const userAccount: User.IUserAccount = ctx.userAccount
+    const { id, password }: User.IUserAccount = ctx.userAccount
     try {
-      const res: User.IUserInfo[] = await userService.getUserInfoById([userAccount.id], ctx)
-      if (res[0].jwt !== token) throw 'UNAUTHORIZATION'
+      const res = await userService.getUserInfoById([id], ctx)
+      if (res[0]?.jwt !== token || res[0]?.password !== password) throw 'UNAUTHORIZATION'
       ctx.userInfo = res[0]
       await next()
     } catch (err) {
+      console.log(err)
       ctx.app.emit('error', errorTypes.UNAUTHORIZATION, ctx)
     }
   }

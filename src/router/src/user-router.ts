@@ -6,6 +6,7 @@ import {
   loginCreate,
   queryUserInfo,
   registerCreate,
+  resetPassword,
   updateUserInfo,
   updateUserStatus,
   userExit
@@ -53,6 +54,16 @@ userRouter.delete(
   verifyPermission('system/user-manage', 'table', 'delete'),
   verifyDeleteUserGrade,
   deleteUser
+)
+userRouter.patch(
+  '/reset-password/:userId',
+  requiredField(['newPassword']),
+  requiredFieldType(userFieldType.resetPassword),
+  verifyTokenExist,
+  verifyTokenInvalid,
+  verifyPermission('system/user-manage', 'table', 'update'),
+  verifyUpdateUserGrade,
+  resetPassword
 )
 userRouter.patch(
   '/:userId',

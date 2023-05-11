@@ -11,7 +11,8 @@ export const menuFieldType: { [k: string]: App.IFieldListType[] } = {
     { field: 'parentId', types: ['String', 'Number', 'Null'] },
     { field: 'requiredId', types: ['String', 'Number', 'Null'] },
     { field: 'order', types: ['String', 'Number'] }
-  ]
+  ],
+  deleteMenu: [{ field: 'menuIds', types: ['Array'] }]
 }
 
 export const menuFields = [

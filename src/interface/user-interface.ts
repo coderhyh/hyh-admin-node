@@ -55,6 +55,7 @@ class UserInterface {
     if (userInfo.status === USER.FROZEN) {
       ctx.app.emit('error', { ...errorTypes.USER_FREEZE, redirect: '/login' }, ctx)
     }
+    Reflect.deleteProperty(userInfo, 'password')
     ctx.body ??= {
       code: 200,
       userInfo
@@ -78,6 +79,14 @@ class UserInterface {
     ctx.body ??= {
       code: 200,
       message: flag ? '删除成功' : '用户不存在'
+    }
+  }
+
+  async resetPassword(ctx: Context) {
+    const flag = await userService.resetPassword(ctx)
+    ctx.body ??= {
+      code: 200,
+      message: flag ? '修改成功' : '用户不存在'
     }
   }
 
@@ -105,6 +114,7 @@ export const {
   getUserList,
   userExit,
   deleteUser,
+  resetPassword,
   updateUserInfo,
   updateUserStatus
 } = new UserInterface()

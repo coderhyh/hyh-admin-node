@@ -18,6 +18,19 @@ class PermissionService {
       return tree
     })
   }
+  async getMenuTreeSelect(ctx: Context) {
+    const s = `
+      SELECT sm1.id, sm1.page, sm1.parentId, sm1.order
+      FROM sys_menu sm1 
+      LEFT JOIN sys_menu sm2 ON sm1.requiredId = sm2.id
+    `
+    return handlerServiceError(ctx, async () => {
+      const res = await connection.execute(s)
+      ;(<Menu.IMenuItem[]>res[0]).sort((a, b) => a.order - b.order)
+      const tree = buildTree(res[0] as any[])
+      return tree
+    })
+  }
   async getMenu(ctx: Context) {
     const s = `SELECT * FROM sys_menu WHERE type IN ('menu', 'directory') AND status = 0`
     const menuPermission: number[] = await this.getMenuPermissionByUserId(ctx)
@@ -81,6 +94,14 @@ class PermissionService {
         }),
         menuId
       ])
+      return !!res[0]?.affectedRows
+    })
+  }
+  async deleteMenu(ctx: Context) {
+    const { menuIds } = ctx.request.body as { menuIds: number[] }
+    const s = `DELETE FROM sys_menu WHERE id in (${menuIds.map((e) => `?`).join(',')})`
+    return handlerServiceError(ctx, async () => {
+      const res: any = await connection.execute(s, menuIds.trim())
       return !!res[0]?.affectedRows
     })
   }

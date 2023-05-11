@@ -9,6 +9,7 @@ export const userFieldType: { [k: string]: App.IFieldListType[] } = {
     { field: 'username', types: ['String'] },
     { field: 'username', types: ['String'] }
   ],
+  resetPassword: [{ field: 'newPassword', types: ['String', 'Number'] }],
   userList: [
     { field: 'pageNo', types: ['String', 'Number'], isOptional: true },
     { field: 'pageSize', types: ['String', 'Number'], isOptional: true },

@@ -194,10 +194,14 @@ class RoleService {
   async deleteRole(ctx: Context) {
     const { roleIds } = ctx.request.body as { roleIds: number[] }
     const s = `DELETE FROM sys_role WHERE id in (${roleIds.map((e) => `?`).join(',')})`
-    return handlerServiceError(ctx, async () => {
+    try {
       const res: any = await connection.execute(s, roleIds.trim())
       return !!res[0]?.affectedRows
-    })
+    } catch (error) {
+      if (error.sqlState === '45000') {
+        ctx.app.emit('error', { message: error.sqlMessage, code: 403 }, ctx)
+      }
+    }
   }
 }
 
