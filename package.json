@@ -1,9 +1,10 @@
 {
-  "name": "umabs-admin-node",
+  "name": "hyh-admin-node",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "ts-node -r tsconfig-paths/register src/main.ts",
     "dev": "nodemon --watch src -w src -r tsconfig-paths/register main.ts --files",
     "build": "webpack",
     "lint": "eslint --ext .js,.ts src/ --fix",
