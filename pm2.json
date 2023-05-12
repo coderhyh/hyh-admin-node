@@ -1,0 +1,9 @@
+{
+  "apps": {
+    "name": "hyh-admin",
+    "script": "ts-node -r tsconfig-paths/register main.ts --files",
+    "instances": "1",
+    "merge_logs": true,
+    "log_date_format": "YYYY-MM-DD HH:mm:ss"
+  }
+}

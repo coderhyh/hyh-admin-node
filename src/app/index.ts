@@ -1,5 +1,5 @@
 import bodyParser from 'koa-bodyparser'
-import cors from 'koa-cors'
+import cors from 'koa2-cors'
 
 import { handleError } from '~/common/handle-error'
 import { MyKoa } from '~/common/MyKoa'
@@ -12,7 +12,7 @@ export interface App extends MyKoa {
 const app: App = new MyKoa()
 app.useRouter = useRouter
 
-app.use(cors({ methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] }))
+app.use(cors({ allowHeaders: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] }))
 app.use(bodyParser())
 app.useRouter(app)
 

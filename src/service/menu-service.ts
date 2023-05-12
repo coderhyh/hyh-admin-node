@@ -99,9 +99,11 @@ class PermissionService {
   }
   async deleteMenu(ctx: Context) {
     const { menuIds } = ctx.request.body as { menuIds: number[] }
-    const s = `DELETE FROM sys_menu WHERE id in (${menuIds.map((e) => `?`).join(',')})`
+    const sq = menuIds.map((e) => `?`).join(',')
+    const s = `DELETE FROM sys_menu WHERE id in (${sq}) OR parentId in (${sq})`
     return handlerServiceError(ctx, async () => {
-      const res: any = await connection.execute(s, menuIds.trim())
+      const ids = menuIds.trim()
+      const res: any = await connection.execute(s, [...ids, ...ids])
       return !!res[0]?.affectedRows
     })
   }
