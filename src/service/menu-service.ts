@@ -1,7 +1,9 @@
 import { Context } from 'koa'
+import mysql from 'mysql2/promise'
 
 import connection from '~/app/database'
 import { buildTree, handlerServiceError } from '~/common/utils'
+import errorTypes from '~/constants/error-types'
 import { menuFields } from '~/router/config/menu-config'
 
 class PermissionService {
@@ -83,19 +85,34 @@ class PermissionService {
   }
   async updateMenu(ctx: Context) {
     const { menuId } = ctx.params ?? {}
-    const s = `
-      UPDATE sys_menu SET ${menuFields.map((e) => `\`${e}\` = ?`).join(', ')} WHERE id = ?
-    `
-    return handlerServiceError(ctx, async () => {
-      const res: any = await connection.execute(s, [
+    const body = ctx.request.body as Menu.IMenuItem
+    const sql_list = [
+      `UPDATE sys_menu SET ${menuFields.map((e) => `\`${e}\` = ?`).join(', ')} WHERE id = ?`,
+      `UPDATE sys_menu SET status = ? WHERE parentId = ?`
+    ]
+    const s = [
+      mysql.format(sql_list[0], [
         ...menuFields.map((e) => {
-          const val = (<Menu.IMenuItem>ctx.request.body)[e as keyof Menu.IMenuItem]
+          const val = body[e as keyof Menu.IMenuItem]
           return typeof val === 'string' ? val.trim() || null : val
         }),
         menuId
-      ])
-      return !!res[0]?.affectedRows
-    })
+      ]),
+      mysql.format(sql_list[1], [body.status, menuId])
+    ]
+
+    const pool = await connection.getConnection()
+
+    try {
+      await pool.beginTransaction()
+      await Promise.all(s.map((e) => e && pool.query(e)))
+      await pool.commit()
+      return true
+    } catch (error) {
+      await pool.rollback()
+      ctx.app.emit('error', errorTypes.SERVER_ERROR, ctx)
+      return false
+    }
   }
   async deleteMenu(ctx: Context) {
     const { menuIds } = ctx.request.body as { menuIds: number[] }
