@@ -18,7 +18,7 @@ import {
   verifyDeleteUserGrade,
   verifyUpdateUserGrade
 } from '~/middleware/user-middleware'
-import { requiredField, requiredFieldType } from '~/middleware/verify-middleware'
+import { requiredField, requiredFieldType, verifyOrderIsLegal } from '~/middleware/verify-middleware'
 
 import { userFieldType } from '../config/user-config'
 
@@ -43,6 +43,7 @@ userRouter.post(
   verifyTokenExist,
   verifyTokenInvalid,
   verifyPermission('system/user-manage', 'table', 'query'),
+  verifyOrderIsLegal(['id', 'username', 'nickname', 'create_time', 'update_time', 'last_login_time', 'role']),
   getUserList
 )
 userRouter.delete(

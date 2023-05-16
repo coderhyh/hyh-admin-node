@@ -48,6 +48,17 @@ class VerifyMiddleware {
       }
     }
   }
+
+  verifyOrderIsLegal(orderByWhiteList: string[]) {
+    return async (ctx: Context, next: Next) => {
+      const orderRule = ['ASC', 'DESC']
+      const { orderBy = 'id', order = 'ASC' } = ctx.request.body as App.IListParamsType<any>
+      if (!orderByWhiteList.includes(orderBy) || !orderRule.includes(order.toUpperCase())) {
+        return ctx.app.emit('error', errorTypes.BAD_REQUEST, ctx)
+      }
+      await next()
+    }
+  }
 }
 
-export const { requiredField, requiredFieldType } = new VerifyMiddleware()
+export const { requiredField, requiredFieldType, verifyOrderIsLegal } = new VerifyMiddleware()

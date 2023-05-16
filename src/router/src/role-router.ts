@@ -15,7 +15,7 @@ import {
   verifyRoleIsExist,
   verifyUpdateRoleGrade
 } from '~/middleware/role-middleware'
-import { requiredField, requiredFieldType } from '~/middleware/verify-middleware'
+import { requiredField, requiredFieldType, verifyOrderIsLegal } from '~/middleware/verify-middleware'
 
 import { roleFieldType } from '../config/role-config'
 
@@ -38,6 +38,16 @@ roleRouter.post(
   verifyTokenExist,
   verifyTokenInvalid,
   verifyPermission('system/role-manage', 'table', 'query'),
+  verifyOrderIsLegal([
+    'id',
+    'role_name',
+    'role_alias',
+    'grade',
+    'create_by',
+    'update_by',
+    'create_time',
+    'update_time'
+  ]),
   getRoleList
 )
 

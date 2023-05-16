@@ -81,22 +81,6 @@ class RoleService {
     } = ctx.request.body as App.IListParamsType<queryConditionType>
     const { id = '', role_name = '', role_alias = '' } = queryCondition
 
-    const orderByWhiteList = [
-      'id',
-      'role_name',
-      'role_alias',
-      'grade',
-      'create_by',
-      'update_by',
-      'create_time',
-      'update_time'
-    ]
-    const orderRule = ['ASC', 'DESC']
-    if (!orderByWhiteList.includes(orderBy) || !orderRule.includes(order.toUpperCase())) {
-      ctx.app.emit('error', errorTypes.BAD_REQUEST, ctx)
-      return []
-    }
-
     const s = `
       SELECT sr.id, sr.role_name, sr.role_alias, sr.status, sr.grade, sr.create_time, sr.update_time,
         su1.username AS create_by,

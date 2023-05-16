@@ -76,13 +76,6 @@ class userService {
     } = ctx.request.body as App.IListParamsType<queryConditionType>
     const { id = '', username = '', nickname = '' } = queryCondition
 
-    const orderByWhiteList = ['id', 'username', 'nickname', 'create_time', 'update_time', 'last_login_time', 'role']
-    const orderRule = ['ASC', 'DESC']
-    if (!orderByWhiteList.includes(orderBy) || !orderRule.includes(order.toUpperCase())) {
-      ctx.app.emit('error', errorTypes.BAD_REQUEST, ctx)
-      return []
-    }
-
     const s = `
       SELECT su.id, su.username, su.nickname, su.create_time, su.update_time, su.last_login_time, su.status,
         JSON_OBJECT('id', sr.id, 'role_name', sr.role_name, 'role_alias', sr.role_alias, 'status', sr.status, 'grade', sr.grade) role,
