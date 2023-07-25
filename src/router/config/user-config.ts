@@ -7,7 +7,7 @@ export const userFieldType: { [k: string]: App.IFieldListType[] } = {
   ],
   userLogin: [
     { field: 'username', types: ['String'] },
-    { field: 'username', types: ['String'] }
+    { field: 'password', types: ['String'] }
   ],
   resetPassword: [{ field: 'newPassword', types: ['String', 'Number'] }],
   userList: [
